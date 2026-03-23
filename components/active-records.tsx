@@ -50,7 +50,7 @@ export function ActiveRecords({ records, onUpdateStatus }: ActiveRecordsProps) {
     { value: "all", label: "ทั้งหมด" },
     { value: "pending-check", label: "รอตรวจท้อง" },
     { value: "pregnant", label: "ตั้งท้อง" },
-    { value: "rebreed", label: "ผสมซ้ำ" },
+    { value: "repeat", label: "ผสมซ้ำ" },
     { value: "delivered", label: "คลอดแล้ว" },
   ]
 
@@ -198,7 +198,7 @@ function RecordCard({ record, onUpdateStatus }: RecordCardProps) {
                     ยืนยันตั้งท้อง
                   </DropdownMenuItem>
                   <DropdownMenuItem
-                    onClick={() => onUpdateStatus(record.id, "rebreed")}
+                    onClick={() => onUpdateStatus(record.id, "repeat")}
                     className="gap-2"
                   >
                     <RefreshCw className="size-4 text-destructive" />
@@ -215,7 +215,7 @@ function RecordCard({ record, onUpdateStatus }: RecordCardProps) {
                   บันทึกคลอด
                 </DropdownMenuItem>
               )}
-              {record.status === "rebreed" && (
+              {(record.status === "repeat" || record.status === "rebreed") && (
                 <DropdownMenuItem
                   onClick={() => onUpdateStatus(record.id, "pending-check")}
                   className="gap-2"

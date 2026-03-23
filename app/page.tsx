@@ -1,92 +1,93 @@
 "use client"
 
-import { useState } from "react"
+import useSWR, { mutate } from "swr"
 import { DashboardCards } from "@/components/dashboard-cards"
 import { BreedingForm } from "@/components/breeding-form"
 import { ActiveRecords } from "@/components/active-records"
 import { AIAnalysis } from "@/components/ai-analysis"
 import { BreedingRecord, BreedingStatus } from "@/lib/types"
+import { Spinner } from "@/components/ui/spinner"
 
-// Mock data for demonstration
-const initialRecords: BreedingRecord[] = [
-  {
-    id: "1",
-    sowId: "S-001",
-    breedingMethod: "artificial",
-    sireId: "B-101",
-    breedingDate: new Date("2026-03-01"),
-    firstCheckDate: new Date("2026-03-22"),
-    confirmDate: new Date("2026-04-15"),
-    dueDate: new Date("2026-06-23"),
-    status: "pregnant",
-    createdAt: new Date("2026-03-01"),
-  },
-  {
-    id: "2",
-    sowId: "S-002",
-    breedingMethod: "natural",
-    sireId: "B-102",
-    breedingDate: new Date("2026-03-10"),
-    firstCheckDate: new Date("2026-03-31"),
-    confirmDate: new Date("2026-04-24"),
-    dueDate: new Date("2026-07-02"),
-    status: "pending-check",
-    createdAt: new Date("2026-03-10"),
-  },
-  {
-    id: "3",
-    sowId: "S-003",
-    breedingMethod: "artificial",
-    sireId: "B-103",
-    breedingDate: new Date("2026-02-01"),
-    firstCheckDate: new Date("2026-02-22"),
-    confirmDate: new Date("2026-03-18"),
-    dueDate: new Date("2026-05-26"),
-    status: "pregnant",
-    createdAt: new Date("2026-02-01"),
-  },
-  {
-    id: "4",
-    sowId: "S-004",
-    breedingMethod: "natural",
-    sireId: "B-104",
-    breedingDate: new Date("2026-03-18"),
-    firstCheckDate: new Date("2026-04-08"),
-    confirmDate: new Date("2026-05-02"),
-    dueDate: new Date("2026-07-10"),
-    status: "pending-check",
-    createdAt: new Date("2026-03-18"),
-  },
-]
+const fetcher = (url: string) => fetch(url).then((res) => res.json())
+
+// Transform API data to app format
+function transformRecord(record: Record<string, unknown>): BreedingRecord {
+  return {
+    id: record.id as string,
+    sowId: record.sow_id as string,
+    breedingMethod: record.breeding_method as "artificial" | "natural",
+    sireId: record.sire_id as string,
+    breedingDate: new Date(record.breeding_date as string),
+    firstCheckDate: new Date(record.first_check_date as string),
+    confirmDate: new Date(record.confirm_date as string),
+    dueDate: new Date(record.due_date as string),
+    status: record.status as BreedingStatus,
+    createdAt: new Date(record.created_at as string),
+    notes: record.notes as string | undefined,
+  }
+}
 
 export default function PigBreedingApp() {
-  const [records, setRecords] = useState<BreedingRecord[]>(initialRecords)
+  const { data: records, error, isLoading } = useSWR<Record<string, unknown>[]>(
+    "/api/breeding",
+    fetcher,
+    { refreshInterval: 30000 }
+  )
 
-  const addRecord = (newRecord: Omit<BreedingRecord, "id" | "createdAt">) => {
-    const record: BreedingRecord = {
-      ...newRecord,
-      id: Date.now().toString(),
-      createdAt: new Date(),
+  const { data: stats } = useSWR<{
+    totalBreedings: number
+    pregnant: number
+    pendingCheck: number
+    dueSoon: number
+  }>("/api/breeding/stats", fetcher, { refreshInterval: 30000 })
+
+  const transformedRecords: BreedingRecord[] = records
+    ? records.map(transformRecord)
+    : []
+
+  const addRecord = async (newRecord: Omit<BreedingRecord, "id" | "createdAt">) => {
+    try {
+      const response = await fetch("/api/breeding", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          sow_id: newRecord.sowId,
+          sire_id: newRecord.sireId,
+          breeding_method: newRecord.breedingMethod,
+          breeding_date: newRecord.breedingDate.toISOString().split("T")[0],
+          first_check_date: newRecord.firstCheckDate.toISOString().split("T")[0],
+          confirm_date: newRecord.confirmDate.toISOString().split("T")[0],
+          due_date: newRecord.dueDate.toISOString().split("T")[0],
+          notes: newRecord.notes,
+        }),
+      })
+
+      if (response.ok) {
+        // Revalidate both endpoints
+        mutate("/api/breeding")
+        mutate("/api/breeding/stats")
+      }
+    } catch (error) {
+      console.error("Error adding record:", error)
     }
-    setRecords((prev) => [record, ...prev])
   }
 
-  const updateRecordStatus = (id: string, status: BreedingStatus) => {
-    setRecords((prev) =>
-      prev.map((record) => (record.id === id ? { ...record, status } : record))
-    )
-  }
+  const updateRecordStatus = async (id: string, status: BreedingStatus) => {
+    try {
+      const response = await fetch(`/api/breeding/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status }),
+      })
 
-  // Calculate dashboard stats
-  const totalBreedings = records.length
-  const pregnantCount = records.filter((r) => r.status === "pregnant").length
-  const pendingCheckCount = records.filter((r) => r.status === "pending-check").length
-  
-  const today = new Date()
-  const sevenDaysFromNow = new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000)
-  const dueSoonCount = records.filter((r) => {
-    return r.status === "pregnant" && r.dueDate <= sevenDaysFromNow && r.dueDate >= today
-  }).length
+      if (response.ok) {
+        mutate("/api/breeding")
+        mutate("/api/breeding/stats")
+      }
+    } catch (error) {
+      console.error("Error updating status:", error)
+    }
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -117,10 +118,10 @@ export default function PigBreedingApp() {
         <section>
           <h2 className="mb-4 text-lg font-semibold">ภาพรวมฟาร์ม</h2>
           <DashboardCards
-            totalBreedings={totalBreedings}
-            pregnantCount={pregnantCount}
-            pendingCheckCount={pendingCheckCount}
-            dueSoonCount={dueSoonCount}
+            totalBreedings={stats?.totalBreedings || 0}
+            pregnantCount={stats?.pregnant || 0}
+            pendingCheckCount={stats?.pendingCheck || 0}
+            dueSoonCount={stats?.dueSoon || 0}
           />
         </section>
 
@@ -133,13 +134,26 @@ export default function PigBreedingApp() {
         {/* Active Records */}
         <section>
           <h2 className="mb-4 text-lg font-semibold">รายการแม่พันธุ์</h2>
-          <ActiveRecords records={records} onUpdateStatus={updateRecordStatus} />
+          {isLoading ? (
+            <div className="flex items-center justify-center py-12">
+              <Spinner className="size-8 text-primary" />
+            </div>
+          ) : error ? (
+            <div className="rounded-lg border border-destructive/50 bg-destructive/10 p-4 text-center text-destructive">
+              เกิดข้อผิดพลาดในการโหลดข้อมูล
+            </div>
+          ) : (
+            <ActiveRecords
+              records={transformedRecords}
+              onUpdateStatus={updateRecordStatus}
+            />
+          )}
         </section>
 
         {/* AI Analysis */}
         <section>
           <h2 className="mb-4 text-lg font-semibold">วิเคราะห์ด้วย AI</h2>
-          <AIAnalysis records={records} />
+          <AIAnalysis />
         </section>
       </main>
 

@@ -1,6 +1,8 @@
 "use client"
 
 import { useState } from "react"
+import { useChat } from "@ai-sdk/react"
+import { DefaultChatTransport } from "ai"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
@@ -9,123 +11,57 @@ import {
   Sparkles, 
   FileText, 
   Send, 
-  TrendingUp, 
-  AlertTriangle,
-  CheckCircle2,
-  Calendar
+  TrendingUp,
+  User,
+  Bot
 } from "lucide-react"
-import { BreedingRecord } from "@/lib/types"
+import { cn } from "@/lib/utils"
 
-interface AIAnalysisProps {
-  records: BreedingRecord[]
+// Helper to get text from message parts
+function getMessageText(message: { parts?: Array<{ type: string; text?: string }> }): string {
+  if (!message.parts || !Array.isArray(message.parts)) return ""
+  return message.parts
+    .filter((p): p is { type: "text"; text: string } => p.type === "text")
+    .map((p) => p.text)
+    .join("")
 }
 
-export function AIAnalysis({ records }: AIAnalysisProps) {
-  const [isGenerating, setIsGenerating] = useState(false)
+export function AIAnalysis() {
+  const [isGeneratingReport, setIsGeneratingReport] = useState(false)
   const [report, setReport] = useState<string | null>(null)
-  const [question, setQuestion] = useState("")
-  const [answer, setAnswer] = useState<string | null>(null)
-  const [isAsking, setIsAsking] = useState(false)
+  const [input, setInput] = useState("")
 
-  // Calculate stats for demo report
-  const pregnantCount = records.filter(r => r.status === "pregnant").length
-  const pendingCount = records.filter(r => r.status === "pending-check").length
-  const rebreedCount = records.filter(r => r.status === "rebreed").length
-  const successRate = records.length > 0 
-    ? Math.round(((pregnantCount + records.filter(r => r.status === "delivered").length) / records.length) * 100)
-    : 0
+  const { messages, sendMessage, status } = useChat({
+    transport: new DefaultChatTransport({ api: "/api/ai/chat" }),
+  })
+
+  const isLoading = status === "streaming" || status === "submitted"
 
   const generateReport = async () => {
-    setIsGenerating(true)
-    // Simulate AI processing
-    await new Promise(resolve => setTimeout(resolve, 1500))
-    
-    const reportText = `📊 รายงานสรุปประจำเดือน มีนาคม 2569
-
-📈 สถิติการผสมพันธุ์
-• จำนวนการผสมทั้งหมด: ${records.length} ครั้ง
-• อัตราการตั้งท้องสำเร็จ: ${successRate}%
-• กำลังตั้งท้อง: ${pregnantCount} ตัว
-• รอตรวจท้อง: ${pendingCount} ตัว
-• ต้องผสมซ้ำ: ${rebreedCount} ตัว
-
-💡 ข้อเสนอแนะ
-${rebreedCount > 0 ? `• ควรตรวจสอบสาเหตุการผสมไม่ติดใน ${rebreedCount} ตัว อาจเกิดจากเวลาผสมไม่เหมาะสม หรือคุณภาพน้ำเชื้อ` : '• อัตราการผสมติดอยู่ในเกณฑ์ดี'}
-• แนะนำให้ตรวจสอบสภาพแวดล้อมและอาหารของแม่พันธุ์ที่กำลังตั้งท้อง
-• ควรเตรียมคอกคลอดสำหรับแม่พันธุ์ที่จะครบกำหนดภายใน 2 สัปดาห์
-
-🎯 เป้าหมายเดือนหน้า
-• เพิ่มอัตราการผสมติดให้ได้ 85%+
-• ลดจำนวนการผสมซ้ำ
-• ติดตามสุขภาพแม่พันธุ์ตั้งท้องอย่างใกล้ชิด`
-
-    setReport(reportText)
-    setIsGenerating(false)
+    setIsGeneratingReport(true)
+    try {
+      const response = await fetch("/api/ai/report", {
+        method: "POST",
+      })
+      const data = await response.json()
+      if (data.report) {
+        setReport(data.report)
+      }
+    } catch (error) {
+      console.error("Error generating report:", error)
+    } finally {
+      setIsGeneratingReport(false)
+    }
   }
 
-  const askQuestion = async () => {
-    if (!question.trim()) return
-    
-    setIsAsking(true)
-    // Simulate AI processing
-    await new Promise(resolve => setTimeout(resolve, 1200))
-    
-    // Demo AI responses based on keywords
-    let response = ""
-    const q = question.toLowerCase()
-    
-    if (q.includes("ผสม") && (q.includes("ติด") || q.includes("สำเร็จ"))) {
-      response = `จากข้อมูลในระบบ อัตราการผสมติดอยู่ที่ ${successRate}% 
+  const handleSendMessage = () => {
+    if (!input.trim() || isLoading) return
+    sendMessage({ text: input })
+    setInput("")
+  }
 
-ปัจจัยที่ส่งผลต่อการผสมติด:
-1. เวลาที่เหมาะสมในการผสม (12-24 ชม. หลังพบอาการเป็นสัด)
-2. คุณภาพน้ำเชื้อ/พ่อพันธุ์
-3. สภาพร่างกายแม่พันธุ์
-4. อุณหภูมิและสภาพแวดล้อม`
-    } else if (q.includes("คลอด") || q.includes("ใกล้คลอด")) {
-      const dueSoonCount = records.filter(r => {
-        const daysUntilDue = Math.ceil(
-          (r.dueDate.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)
-        )
-        return r.status === "pregnant" && daysUntilDue <= 14 && daysUntilDue >= 0
-      }).length
-      
-      response = `มีแม่พันธุ์ที่จะคลอดภายใน 14 วัน จำนวน ${dueSoonCount} ตัว
-
-สิ่งที่ควรเตรียม:
-1. ทำความสะอาดคอกคลอด
-2. เตรียมโคมไฟให้ความอบอุ่น
-3. เตรียมอุปกรณ์ช่วยคลอด
-4. ตรวจสุขภาพแม่พันธุ์ก่อนคลอด`
-    } else if (q.includes("ปัญหา") || q.includes("แนะนำ")) {
-      response = `📋 สรุปปัญหาและข้อแนะนำ:
-
-${rebreedCount > 0 ? `⚠️ พบการผสมไม่ติด ${rebreedCount} ครั้ง
-- ตรวจสอบระบบสืบพันธุ์แม่พันธุ์
-- ทบทวนเวลาการผสม
-- ตรวจคุณภาพน้ำเชื้อ` : '✅ ไม่พบปัญหาการผสมไม่ติด'}
-
-💡 ข้อแนะนำทั่วไป:
-- บันทึกข้อมูลอย่างสม่ำเสมอ
-- ตรวจท้องตามกำหนด
-- เตรียมคอกคลอดล่วงหน้า`
-    } else {
-      response = `ขอบคุณสำหรับคำถาม! 
-
-จากข้อมูลในฟาร์มของคุณ:
-• มีการผสมพันธุ์ทั้งหมด ${records.length} ครั้ง
-• อัตราความสำเร็จ ${successRate}%
-• มีแม่พันธุ์ตั้งท้อง ${pregnantCount} ตัว
-
-หากต้องการข้อมูลเฉพาะเจาะจง ลองถามเกี่ยวกับ:
-- อัตราการผสมติด
-- แม่พันธุ์ใกล้คลอด
-- ข้อแนะนำในการจัดการ`
-    }
-    
-    setAnswer(response)
-    setIsAsking(false)
-    setQuestion("")
+  const handleQuickQuestion = (question: string) => {
+    sendMessage({ text: question })
   }
 
   return (
@@ -147,10 +83,10 @@ ${rebreedCount > 0 ? `⚠️ พบการผสมไม่ติด ${rebree
             </div>
             <Button 
               onClick={generateReport}
-              disabled={isGenerating}
+              disabled={isGeneratingReport}
               className="gap-2"
             >
-              {isGenerating ? (
+              {isGeneratingReport ? (
                 <>
                   <Spinner className="size-4" />
                   กำลังสร้าง...
@@ -190,15 +126,52 @@ ${rebreedCount > 0 ? `⚠️ พบการผสมไม่ติด ${rebree
             </div>
           </div>
 
-          {/* Answer Display */}
-          {answer && (
-            <div className="mb-4 rounded-lg border border-info/20 bg-info/5 p-4">
-              <div className="flex items-start gap-2">
-                <Sparkles className="mt-0.5 size-4 shrink-0 text-info" />
-                <pre className="whitespace-pre-wrap font-sans text-sm leading-relaxed">
-                  {answer}
-                </pre>
-              </div>
+          {/* Chat Messages */}
+          {messages.length > 0 && (
+            <div className="mb-4 max-h-80 space-y-3 overflow-y-auto rounded-lg border bg-muted/20 p-3">
+              {messages.map((message) => (
+                <div
+                  key={message.id}
+                  className={cn(
+                    "flex gap-2",
+                    message.role === "user" ? "justify-end" : "justify-start"
+                  )}
+                >
+                  {message.role === "assistant" && (
+                    <div className="flex size-7 shrink-0 items-center justify-center rounded-full bg-primary/10">
+                      <Bot className="size-4 text-primary" />
+                    </div>
+                  )}
+                  <div
+                    className={cn(
+                      "rounded-lg px-3 py-2 text-sm max-w-[85%]",
+                      message.role === "user"
+                        ? "bg-primary text-primary-foreground"
+                        : "bg-background border"
+                    )}
+                  >
+                    <pre className="whitespace-pre-wrap font-sans">
+                      {getMessageText(message)}
+                    </pre>
+                  </div>
+                  {message.role === "user" && (
+                    <div className="flex size-7 shrink-0 items-center justify-center rounded-full bg-muted">
+                      <User className="size-4 text-muted-foreground" />
+                    </div>
+                  )}
+                </div>
+              ))}
+              {isLoading && (
+                <div className="flex gap-2">
+                  <div className="flex size-7 shrink-0 items-center justify-center rounded-full bg-primary/10">
+                    <Bot className="size-4 text-primary" />
+                  </div>
+                  <div className="flex items-center gap-2 rounded-lg border bg-background px-3 py-2">
+                    <Spinner className="size-4" />
+                    <span className="text-sm text-muted-foreground">กำลังพิมพ์...</span>
+                  </div>
+                </div>
+              )}
             </div>
           )}
 
@@ -206,23 +179,23 @@ ${rebreedCount > 0 ? `⚠️ พบการผสมไม่ติด ${rebree
           <div className="flex gap-2">
             <Textarea
               placeholder="พิมพ์คำถาม เช่น 'อัตราการผสมติดเป็นอย่างไร' หรือ 'มีแม่พันธุ์ใกล้คลอดกี่ตัว'"
-              value={question}
-              onChange={(e) => setQuestion(e.target.value)}
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
               className="min-h-[80px] resize-none bg-background"
               onKeyDown={(e) => {
                 if (e.key === "Enter" && !e.shiftKey) {
                   e.preventDefault()
-                  askQuestion()
+                  handleSendMessage()
                 }
               }}
             />
             <Button 
-              onClick={askQuestion}
-              disabled={isAsking || !question.trim()}
+              onClick={handleSendMessage}
+              disabled={isLoading || !input.trim()}
               size="icon"
               className="size-10 shrink-0 self-end"
             >
-              {isAsking ? (
+              {isLoading ? (
                 <Spinner className="size-4" />
               ) : (
                 <Send className="size-4" />
@@ -236,7 +209,8 @@ ${rebreedCount > 0 ? `⚠️ พบการผสมไม่ติด ${rebree
               variant="outline"
               size="sm"
               className="text-xs"
-              onClick={() => setQuestion("อัตราการผสมติดเป็นอย่างไร")}
+              onClick={() => handleQuickQuestion("อัตราการผสมติดเป็นอย่างไร")}
+              disabled={isLoading}
             >
               อัตราการผสมติด
             </Button>
@@ -244,7 +218,8 @@ ${rebreedCount > 0 ? `⚠️ พบการผสมไม่ติด ${rebree
               variant="outline"
               size="sm"
               className="text-xs"
-              onClick={() => setQuestion("มีแม่พันธุ์ใกล้คลอดกี่ตัว")}
+              onClick={() => handleQuickQuestion("มีแม่พันธุ์ใกล้คลอดกี่ตัว")}
+              disabled={isLoading}
             >
               แม่พันธุ์ใกล้คลอด
             </Button>
@@ -252,7 +227,8 @@ ${rebreedCount > 0 ? `⚠️ พบการผสมไม่ติด ${rebree
               variant="outline"
               size="sm"
               className="text-xs"
-              onClick={() => setQuestion("ปัญหาและข้อแนะนำ")}
+              onClick={() => handleQuickQuestion("ปัญหาและข้อแนะนำสำหรับฟาร์ม")}
+              disabled={isLoading}
             >
               ข้อแนะนำ
             </Button>
