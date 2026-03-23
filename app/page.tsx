@@ -7,55 +7,60 @@ import { ActiveRecords } from "@/components/active-records"
 import { AIAnalysis } from "@/components/ai-analysis"
 import { BreedingRecord, BreedingStatus } from "@/lib/types"
 
-// Mock data for demonstration
+// Helper function to create dates consistently
+function createDate(dateString: string): Date {
+  return new Date(dateString + "T00:00:00.000Z")
+}
+
+// Mock data for demonstration - using ISO date strings for consistent hydration
 const initialRecords: BreedingRecord[] = [
   {
     id: "1",
     sowId: "S-001",
     breedingMethod: "artificial",
     sireId: "B-101",
-    breedingDate: new Date("2026-03-01"),
-    firstCheckDate: new Date("2026-03-22"),
-    confirmDate: new Date("2026-04-15"),
-    dueDate: new Date("2026-06-23"),
+    breedingDate: createDate("2026-03-01"),
+    firstCheckDate: createDate("2026-03-22"),
+    confirmDate: createDate("2026-04-15"),
+    dueDate: createDate("2026-06-23"),
     status: "pregnant",
-    createdAt: new Date("2026-03-01"),
+    createdAt: createDate("2026-03-01"),
   },
   {
     id: "2",
     sowId: "S-002",
     breedingMethod: "natural",
     sireId: "B-102",
-    breedingDate: new Date("2026-03-10"),
-    firstCheckDate: new Date("2026-03-31"),
-    confirmDate: new Date("2026-04-24"),
-    dueDate: new Date("2026-07-02"),
+    breedingDate: createDate("2026-03-10"),
+    firstCheckDate: createDate("2026-03-31"),
+    confirmDate: createDate("2026-04-24"),
+    dueDate: createDate("2026-07-02"),
     status: "pending-check",
-    createdAt: new Date("2026-03-10"),
+    createdAt: createDate("2026-03-10"),
   },
   {
     id: "3",
     sowId: "S-003",
     breedingMethod: "artificial",
     sireId: "B-103",
-    breedingDate: new Date("2026-02-01"),
-    firstCheckDate: new Date("2026-02-22"),
-    confirmDate: new Date("2026-03-18"),
-    dueDate: new Date("2026-05-26"),
+    breedingDate: createDate("2026-02-01"),
+    firstCheckDate: createDate("2026-02-22"),
+    confirmDate: createDate("2026-03-18"),
+    dueDate: createDate("2026-05-26"),
     status: "pregnant",
-    createdAt: new Date("2026-02-01"),
+    createdAt: createDate("2026-02-01"),
   },
   {
     id: "4",
     sowId: "S-004",
     breedingMethod: "natural",
     sireId: "B-104",
-    breedingDate: new Date("2026-03-18"),
-    firstCheckDate: new Date("2026-04-08"),
-    confirmDate: new Date("2026-05-02"),
-    dueDate: new Date("2026-07-10"),
+    breedingDate: createDate("2026-03-18"),
+    firstCheckDate: createDate("2026-04-08"),
+    confirmDate: createDate("2026-05-02"),
+    dueDate: createDate("2026-07-10"),
     status: "pending-check",
-    createdAt: new Date("2026-03-18"),
+    createdAt: createDate("2026-03-18"),
   },
 ]
 
