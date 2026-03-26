@@ -48,17 +48,17 @@ export function DashboardCards({
   ]
 
   return (
-    <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
       {stats.map((stat) => (
         <Card key={stat.label} className={`border ${stat.borderColor}`}>
           <CardContent className="p-4">
             <div className="flex items-start justify-between">
               <div className="space-y-1">
-                <p className="text-xs text-muted-foreground leading-tight">{stat.label}</p>
-                <p className="text-2xl font-bold tabular-nums">{stat.value}</p>
+                <p className="text-sm text-muted-foreground leading-tight">{stat.label}</p>
+                <p className="text-3xl font-bold tabular-nums">{stat.value}</p>
               </div>
               <div className={`rounded-lg p-2 ${stat.color}`}>
-                <stat.icon className="size-4" />
+                <stat.icon className="size-5" />
               </div>
             </div>
           </CardContent>

@@ -66,7 +66,7 @@ export function BreedingForm({ onSubmit }: BreedingFormProps) {
           <FieldGroup>
             {/* Sow ID */}
             <Field>
-              <FieldLabel htmlFor="sowId">เบอร์หูแม่พันธุ์</FieldLabel>
+              <FieldLabel htmlFor="sowId" className="text-base">เบอร์หูแม่พันธุ์</FieldLabel>
               <Input
                 id="sowId"
                 placeholder="เช่น S-001"
@@ -78,13 +78,13 @@ export function BreedingForm({ onSubmit }: BreedingFormProps) {
 
             {/* Breeding Method */}
             <Field>
-              <FieldLabel>วิธีผสม</FieldLabel>
+              <FieldLabel className="text-base">วิธีผสม</FieldLabel>
               <div className="flex gap-2">
                 <Button
                   type="button"
                   variant={method === "artificial" ? "default" : "outline"}
                   className={cn(
-                    "flex-1 gap-2",
+                    "flex-1 gap-2 text-base",
                     method === "artificial" && "bg-primary text-primary-foreground"
                   )}
                   onClick={() => setMethod("artificial")}
@@ -96,7 +96,7 @@ export function BreedingForm({ onSubmit }: BreedingFormProps) {
                   type="button"
                   variant={method === "natural" ? "default" : "outline"}
                   className={cn(
-                    "flex-1 gap-2",
+                    "flex-1 gap-2 text-base",
                     method === "natural" && "bg-primary text-primary-foreground"
                   )}
                   onClick={() => setMethod("natural")}
@@ -109,7 +109,7 @@ export function BreedingForm({ onSubmit }: BreedingFormProps) {
 
             {/* Sire ID */}
             <Field>
-              <FieldLabel htmlFor="sireId">
+              <FieldLabel htmlFor="sireId" className="text-base">
                 {method === "artificial" ? "รหัสน้ำเชื้อ" : "รหัสพ่อพันธุ์"}
               </FieldLabel>
               <Input
@@ -123,13 +123,13 @@ export function BreedingForm({ onSubmit }: BreedingFormProps) {
 
             {/* Breeding Date */}
             <Field>
-              <FieldLabel>วันที่ผสม</FieldLabel>
+              <FieldLabel className="text-base">วันที่ผสม</FieldLabel>
               <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
                 <PopoverTrigger asChild>
                   <Button
                     variant="outline"
                     className={cn(
-                      "w-full justify-start text-left font-normal bg-background",
+                      "w-full justify-start text-left text-base font-normal bg-background",
                       !breedingDate && "text-muted-foreground"
                     )}
                   >
@@ -160,15 +160,15 @@ export function BreedingForm({ onSubmit }: BreedingFormProps) {
 
           {/* Calculated Dates Display */}
           <div className="rounded-lg border border-primary/20 bg-primary/5 p-4">
-            <h4 className="mb-3 text-sm font-medium text-primary">วันสำคัญที่คำนวณได้</h4>
+            <h4 className="mb-3 text-base font-medium text-primary">วันสำคัญที่คำนวณได้</h4>
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
               <div className="flex items-center gap-3 rounded-md bg-background p-3">
                 <div className="flex size-8 items-center justify-center rounded-full bg-warning/20 text-xs font-bold text-accent">
                   21
                 </div>
                 <div>
-                  <p className="text-xs text-muted-foreground">ตรวจท้องครั้งที่ 1</p>
-                  <p className="text-sm font-medium">
+                  <p className="text-sm text-muted-foreground">ตรวจท้องครั้งที่ 1</p>
+                  <p className="text-base font-medium">
                     {formatDateThai(calculatedDates.firstCheckDate)}
                   </p>
                 </div>
@@ -178,8 +178,8 @@ export function BreedingForm({ onSubmit }: BreedingFormProps) {
                   45
                 </div>
                 <div>
-                  <p className="text-xs text-muted-foreground">ตรวจยืนยัน</p>
-                  <p className="text-sm font-medium">
+                  <p className="text-sm text-muted-foreground">ตรวจยืนยัน</p>
+                  <p className="text-base font-medium">
                     {formatDateThai(calculatedDates.confirmDate)}
                   </p>
                 </div>
@@ -189,8 +189,8 @@ export function BreedingForm({ onSubmit }: BreedingFormProps) {
                   114
                 </div>
                 <div>
-                  <p className="text-xs text-muted-foreground">กำหนดคลอด</p>
-                  <p className="text-sm font-medium">
+                  <p className="text-sm text-muted-foreground">กำหนดคลอด</p>
+                  <p className="text-base font-medium">
                     {formatDateThai(calculatedDates.dueDate)}
                   </p>
                 </div>
@@ -201,7 +201,7 @@ export function BreedingForm({ onSubmit }: BreedingFormProps) {
           {/* Submit Button */}
           <Button 
             type="submit" 
-            className="w-full gap-2"
+            className="h-12 w-full gap-2 text-base"
             disabled={!sowId.trim() || !sireId.trim()}
           >
             <Check className="size-4" />

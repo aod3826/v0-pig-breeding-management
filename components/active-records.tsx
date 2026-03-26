@@ -64,11 +64,11 @@ export function ActiveRecords({ records, onUpdateStatus }: ActiveRecordsProps) {
             variant={filter === option.value ? "default" : "outline"}
             size="sm"
             onClick={() => setFilter(option.value)}
-            className="shrink-0"
+            className="h-11 shrink-0 text-base"
           >
             {option.label}
             {option.value !== "all" && (
-              <span className="ml-1.5 rounded-full bg-background/20 px-1.5 text-xs">
+              <span className="ml-1.5 rounded-full bg-background/20 px-2 py-0.5 text-sm">
                 {records.filter((r) => r.status === option.value).length}
               </span>
             )}
@@ -135,19 +135,19 @@ function RecordCard({ record, onUpdateStatus }: RecordCardProps) {
               <span className="text-lg font-semibold">{record.sowId}</span>
               <Badge 
                 variant="outline" 
-                className={cn("text-xs", getStatusColor(record.status))}
+                className={cn("text-sm", getStatusColor(record.status))}
               >
                 {getStatusLabel(record.status)}
               </Badge>
               {isNearDue && (
-                <Badge className="bg-info text-info-foreground text-xs">
+                <Badge className="bg-info text-info-foreground text-sm">
                   คลอดใน {daysUntilDue} วัน
                 </Badge>
               )}
             </div>
 
             {/* Details */}
-            <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
+            <div className="grid grid-cols-1 gap-x-4 gap-y-2 text-base sm:grid-cols-2">
               <div className="flex items-center gap-2 text-muted-foreground">
                 {record.breedingMethod === "artificial" ? (
                   <Syringe className="size-3.5" />
@@ -172,7 +172,7 @@ function RecordCard({ record, onUpdateStatus }: RecordCardProps) {
 
             {/* Timeline */}
             {record.status === "pending-check" && (
-              <div className="flex items-center gap-2 rounded-md bg-warning/10 px-3 py-2 text-xs">
+              <div className="flex items-center gap-2 rounded-md bg-warning/10 px-3 py-2 text-sm">
                 <Calendar className="size-3.5 text-accent" />
                 <span>ตรวจท้องครั้งที่ 1: {formatDateThai(record.firstCheckDate)}</span>
               </div>
@@ -182,7 +182,7 @@ function RecordCard({ record, onUpdateStatus }: RecordCardProps) {
           {/* Actions */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="size-8">
+              <Button variant="ghost" size="icon" className="size-11">
                 <MoreVertical className="size-4" />
                 <span className="sr-only">เมนู</span>
               </Button>

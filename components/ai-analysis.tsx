@@ -75,8 +75,8 @@ export function AIAnalysis() {
                 <Sparkles className="size-5 text-primary" />
               </div>
               <div>
-                <h3 className="font-medium">รายงาน AI ประจำเดือน</h3>
-                <p className="text-sm text-muted-foreground">
+                <h3 className="text-lg font-semibold">รายงาน AI ประจำเดือน</h3>
+                <p className="text-base text-muted-foreground">
                   วิเคราะห์ข้อมูลและสร้างรายงานสรุปอัตโนมัติ
                 </p>
               </div>
@@ -103,7 +103,7 @@ export function AIAnalysis() {
           {/* Report Display */}
           {report && (
             <div className="mt-4 rounded-lg border bg-muted/30 p-4">
-              <pre className="whitespace-pre-wrap font-sans text-sm leading-relaxed">
+                  <pre className="whitespace-pre-wrap font-sans text-base leading-relaxed">
                 {report}
               </pre>
             </div>
@@ -119,8 +119,8 @@ export function AIAnalysis() {
               <TrendingUp className="size-5 text-info" />
             </div>
             <div>
-              <h3 className="font-medium">ถาม AI เกี่ยวกับฟาร์ม</h3>
-              <p className="text-sm text-muted-foreground">
+              <h3 className="text-lg font-semibold">ถาม AI เกี่ยวกับฟาร์ม</h3>
+              <p className="text-base text-muted-foreground">
                 วิเคราะห์และตอบคำถามจากข้อมูลในระบบ
               </p>
             </div>
@@ -144,7 +144,7 @@ export function AIAnalysis() {
                   )}
                   <div
                     className={cn(
-                      "rounded-lg px-3 py-2 text-sm max-w-[85%]",
+                      "max-w-[85%] rounded-lg px-4 py-3 text-base",
                       message.role === "user"
                         ? "bg-primary text-primary-foreground"
                         : "bg-background border"
@@ -168,7 +168,7 @@ export function AIAnalysis() {
                   </div>
                   <div className="flex items-center gap-2 rounded-lg border bg-background px-3 py-2">
                     <Spinner className="size-4" />
-                    <span className="text-sm text-muted-foreground">กำลังพิมพ์...</span>
+                    <span className="text-base text-muted-foreground">กำลังพิมพ์...</span>
                   </div>
                 </div>
               )}
@@ -181,7 +181,7 @@ export function AIAnalysis() {
               placeholder="พิมพ์คำถาม เช่น 'อัตราการผสมติดเป็นอย่างไร' หรือ 'มีแม่พันธุ์ใกล้คลอดกี่ตัว'"
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              className="min-h-[80px] resize-none bg-background"
+              className="min-h-[100px] resize-none bg-background text-base"
               onKeyDown={(e) => {
                 if (e.key === "Enter" && !e.shiftKey) {
                   e.preventDefault()
@@ -193,7 +193,7 @@ export function AIAnalysis() {
               onClick={handleSendMessage}
               disabled={isLoading || !input.trim()}
               size="icon"
-              className="size-10 shrink-0 self-end"
+              className="size-12 shrink-0 self-end"
             >
               {isLoading ? (
                 <Spinner className="size-4" />
@@ -208,7 +208,7 @@ export function AIAnalysis() {
             <Button
               variant="outline"
               size="sm"
-              className="text-xs"
+                  className="text-sm"
               onClick={() => handleQuickQuestion("อัตราการผสมติดเป็นอย่างไร")}
               disabled={isLoading}
             >
@@ -217,7 +217,7 @@ export function AIAnalysis() {
             <Button
               variant="outline"
               size="sm"
-              className="text-xs"
+                  className="text-sm"
               onClick={() => handleQuickQuestion("มีแม่พันธุ์ใกล้คลอดกี่ตัว")}
               disabled={isLoading}
             >
@@ -226,7 +226,7 @@ export function AIAnalysis() {
             <Button
               variant="outline"
               size="sm"
-              className="text-xs"
+                  className="text-sm"
               onClick={() => handleQuickQuestion("ปัญหาและข้อแนะนำสำหรับฟาร์ม")}
               disabled={isLoading}
             >
