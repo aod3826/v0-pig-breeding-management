@@ -8,6 +8,50 @@ export type BreedingStatus =
   | "delivered"      // คลอดแล้ว
   | "failed"         // ล้มเหลว
 
+export type SowStatus = "active" | "inactive" | "culled"
+export type SireStatus = "active" | "inactive"
+export type SireType = "natural" | "ai"
+
+// Sow (แม่พันธุ์)
+export interface Sow {
+  id: string
+  sowId: string          // เบอร์หู
+  name?: string
+  breed?: string
+  birthDate?: Date
+  status: SowStatus
+  notes?: string
+  createdAt: Date
+  updatedAt: Date
+  // Computed fields
+  breedingCount?: number
+  lastBreedingDate?: Date
+}
+
+// Sire (พ่อพันธุ์/น้ำเชื้อ)
+export interface Sire {
+  id: string
+  sireId: string         // รหัสน้ำเชื้อ/พ่อพันธุ์
+  name?: string
+  breed?: string
+  sireType: SireType     // natural = ผสมจริง, ai = น้ำเชื้อ
+  status: SireStatus
+  notes?: string
+  createdAt: Date
+  updatedAt: Date
+}
+
+// Delivery data for recording birth results
+export interface DeliveryData {
+  actualDeliveryDate: Date
+  litterSizeBorn: number
+  litterSizeAlive: number
+  litterSizeDead: number
+  litterSizeMummy: number
+  avgBirthWeight?: number
+  notes?: string
+}
+
 export interface BreedingRecord {
   id: string
   sowId: string
@@ -20,6 +64,49 @@ export interface BreedingRecord {
   status: BreedingStatus
   createdAt: Date
   notes?: string
+  // Delivery fields
+  actualDeliveryDate?: Date
+  litterSizeBorn?: number
+  litterSizeAlive?: number
+  litterSizeDead?: number
+  litterSizeMummy?: number
+  avgBirthWeight?: number
+}
+
+// Alert types for notifications
+export type AlertType = "first-check" | "confirm-check" | "due-soon" | "overdue"
+export type AlertSeverity = "warning" | "info" | "danger"
+
+export interface Alert {
+  id: string
+  type: AlertType
+  severity: AlertSeverity
+  title: string
+  description: string
+  date: Date
+  record: BreedingRecord
+}
+
+// Report statistics
+export interface MonthlyStats {
+  month: string           // YYYY-MM
+  totalBreedings: number
+  pregnantCount: number
+  deliveredCount: number
+  rebreedCount: number
+}
+
+export interface StatusDistribution {
+  status: BreedingStatus
+  count: number
+  percentage: number
+}
+
+export interface DeliveryStats {
+  avgLitterSize: number
+  avgAliveRate: number
+  avgBirthWeight: number
+  totalDeliveries: number
 }
 
 export interface DashboardStats {
