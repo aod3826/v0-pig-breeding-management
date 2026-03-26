@@ -1,23 +1,35 @@
 "use client"
 
-import { useState, useMemo } from "react"
+import { useState, useMemo, useEffect } from "react"
+import useSWR from "swr"
 import { format } from "date-fns"
 import { th } from "date-fns/locale"
-import { CalendarIcon, Syringe, PiggyBank, Check } from "lucide-react"
+import { CalendarIcon, Syringe, PiggyBank, Check, ChevronDown } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Calendar } from "@/components/ui/calendar"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field"
 import { cn } from "@/lib/utils"
 import { 
   BreedingMethod, 
   BreedingRecord, 
   calculateBreedingDates, 
-  formatDateThai 
+  formatDateThai,
+  Sow,
+  Sire,
 } from "@/lib/types"
+
+const fetcher = (url: string) => fetch(url).then((res) => res.json())
 
 interface BreedingFormProps {
   onSubmit: (record: Omit<BreedingRecord, "id" | "createdAt">) => void
@@ -29,6 +41,44 @@ export function BreedingForm({ onSubmit }: BreedingFormProps) {
   const [sireId, setSireId] = useState("")
   const [breedingDate, setBreedingDate] = useState<Date>(new Date())
   const [isCalendarOpen, setIsCalendarOpen] = useState(false)
+  const [useDropdown, setUseDropdown] = useState(true)
+
+  // Fetch sows and sires
+  const { data: sowsData } = useSWR<Record<string, unknown>[]>(
+    "/api/sows?status=active",
+    fetcher
+  )
+
+  const { data: siresData } = useSWR<Record<string, unknown>[]>(
+    "/api/sires?status=active",
+    fetcher
+  )
+
+  const sows: Sow[] = sowsData
+    ? sowsData.map((s: any) => ({
+        id: s.id,
+        sowId: s.sow_id,
+        name: s.name,
+        breed: s.breed,
+        status: s.status,
+      }))
+    : []
+
+  const sires: Sire[] = siresData
+    ? siresData.map((s: any) => ({
+        id: s.id,
+        sireId: s.sire_id,
+        name: s.name,
+        breed: s.breed,
+        sireType: s.sire_type,
+        status: s.status,
+      }))
+    : []
+
+  const activeSires = sires.filter(
+    (s) => (method === "artificial" && s.sireType === "ai") ||
+           (method === "natural" && s.sireType === "natural")
+  )
 
   // Calculate important dates
   const calculatedDates = useMemo(() => {
@@ -67,13 +117,29 @@ export function BreedingForm({ onSubmit }: BreedingFormProps) {
             {/* Sow ID */}
             <Field>
               <FieldLabel htmlFor="sowId">เบอร์หูแม่พันธุ์</FieldLabel>
-              <Input
-                id="sowId"
-                placeholder="เช่น S-001"
-                value={sowId}
-                onChange={(e) => setSowId(e.target.value)}
-                className="bg-background"
-              />
+              {useDropdown && sows.length > 0 ? (
+                <Select value={sowId} onValueChange={setSowId}>
+                  <SelectTrigger className="bg-background">
+                    <SelectValue placeholder="เลือกแม่พันธุ์" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {sows.map((sow) => (
+                      <SelectItem key={sow.id} value={sow.sowId}>
+                        {sow.sowId}
+                        {sow.name && ` - ${sow.name}`}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              ) : (
+                <Input
+                  id="sowId"
+                  placeholder="เช่น S-001"
+                  value={sowId}
+                  onChange={(e) => setSowId(e.target.value)}
+                  className="bg-background"
+                />
+              )}
             </Field>
 
             {/* Breeding Method */}
@@ -112,13 +178,35 @@ export function BreedingForm({ onSubmit }: BreedingFormProps) {
               <FieldLabel htmlFor="sireId">
                 {method === "artificial" ? "รหัสน้ำเชื้อ" : "รหัสพ่อพันธุ์"}
               </FieldLabel>
-              <Input
-                id="sireId"
-                placeholder={method === "artificial" ? "เช่น SP-101" : "เช่น B-001"}
-                value={sireId}
-                onChange={(e) => setSireId(e.target.value)}
-                className="bg-background"
-              />
+              {useDropdown && activeSires.length > 0 ? (
+                <Select value={sireId} onValueChange={setSireId}>
+                  <SelectTrigger className="bg-background">
+                    <SelectValue
+                      placeholder={
+                        method === "artificial"
+                          ? "เลือกน้ำเชื้อ"
+                          : "เลือกพ่อพันธุ์"
+                      }
+                    />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {activeSires.map((sire) => (
+                      <SelectItem key={sire.id} value={sire.sireId}>
+                        {sire.sireId}
+                        {sire.name && ` - ${sire.name}`}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              ) : (
+                <Input
+                  id="sireId"
+                  placeholder={method === "artificial" ? "เช่น SP-101" : "เช่น B-001"}
+                  value={sireId}
+                  onChange={(e) => setSireId(e.target.value)}
+                  className="bg-background"
+                />
+              )}
             </Field>
 
             {/* Breeding Date */}
