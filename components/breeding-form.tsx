@@ -8,6 +8,7 @@ import { CalendarIcon, Syringe, PiggyBank, Check } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
+import { Textarea } from "@/components/ui/textarea"
 import { Calendar } from "@/components/ui/calendar"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field"
@@ -29,6 +30,7 @@ export function BreedingForm({ onSubmit }: BreedingFormProps) {
   const [sireId, setSireId] = useState("")
   const [breedingDate, setBreedingDate] = useState<Date>(new Date())
   const [isCalendarOpen, setIsCalendarOpen] = useState(false)
+  const [notes, setNotes] = useState("")
 
   // Calculate important dates
   const calculatedDates = useMemo(() => {
@@ -51,12 +53,14 @@ export function BreedingForm({ onSubmit }: BreedingFormProps) {
       confirmDate: calculatedDates.confirmDate,
       dueDate: calculatedDates.dueDate,
       status: "pending-check",
+      notes: notes.trim() || undefined,
     })
 
     // Reset form
     setSowId("")
     setSireId("")
     setBreedingDate(new Date())
+    setNotes("")
   }
 
   return (
@@ -155,6 +159,18 @@ export function BreedingForm({ onSubmit }: BreedingFormProps) {
                   />
                 </PopoverContent>
               </Popover>
+            </Field>
+
+            {/* Notes */}
+            <Field>
+              <FieldLabel htmlFor="notes" className="text-base">หมายเหตุ (ไม่บังคับ)</FieldLabel>
+              <Textarea
+                id="notes"
+                placeholder="เพิ่มข้อมูลเพิ่มเติม เช่น สุขภาพแม่พันธุ์ หรือข้อสังเกตอื่นๆ"
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+                className="min-h-[80px] bg-background resize-none"
+              />
             </Field>
           </FieldGroup>
 
