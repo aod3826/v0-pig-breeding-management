@@ -18,7 +18,7 @@ export function DashboardCards({
 }: DashboardCardsProps) {
   const stats = [
     {
-      label: "จำนวนการผสมทั้งหมด",
+      label: "การผสมทั้งหมด",
       value: totalBreedings,
       icon: ClipboardList,
       color: "bg-primary/10 text-primary",
@@ -48,17 +48,17 @@ export function DashboardCards({
   ]
 
   return (
-    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+    <div className="grid grid-cols-2 gap-2 sm:gap-3 lg:grid-cols-4">
       {stats.map((stat) => (
         <Card key={stat.label} className={`border ${stat.borderColor}`}>
-          <CardContent className="p-4">
-            <div className="flex items-start justify-between">
-              <div className="space-y-1">
-                <p className="text-sm text-muted-foreground leading-tight">{stat.label}</p>
-                <p className="text-3xl font-bold tabular-nums">{stat.value}</p>
+          <CardContent className="p-3 sm:p-4">
+            <div className="flex items-start justify-between gap-2">
+              <div className="min-w-0 space-y-0.5 sm:space-y-1">
+                <p className="text-xs text-muted-foreground leading-tight sm:text-sm">{stat.label}</p>
+                <p className="text-2xl font-bold tabular-nums sm:text-3xl">{stat.value}</p>
               </div>
-              <div className={`rounded-lg p-2 ${stat.color}`}>
-                <stat.icon className="size-5" />
+              <div className={`shrink-0 rounded-lg p-1.5 sm:p-2 ${stat.color}`}>
+                <stat.icon className="size-4 sm:size-5" />
               </div>
             </div>
           </CardContent>
