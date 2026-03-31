@@ -44,7 +44,7 @@ export default function PigBreedingApp() {
     dueSoon: number
   }>("/api/breeding/stats", fetcher, { refreshInterval: 30000 })
 
-  const transformedRecords: BreedingRecord[] = records
+  const transformedRecords: BreedingRecord[] = Array.isArray(records)
     ? records.map(transformRecord)
     : []
 

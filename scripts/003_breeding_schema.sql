@@ -38,8 +38,10 @@ CREATE TABLE IF NOT EXISTS breeding_records (
   first_check_date DATE NOT NULL,
   confirm_date DATE NOT NULL,
   due_date DATE NOT NULL,
-  status TEXT NOT NULL DEFAULT 'pending-check' CHECK (status IN ('pending-check', 'pregnant', 'repeat', 'delivered', 'failed')),
+  status TEXT NOT NULL DEFAULT 'pending-check' CHECK (status IN ('pending-check', 'pregnant', 'repeat', 'rebreed', 'delivered', 'failed')),
   notes TEXT,
+  piglet_count INTEGER,
+  delivered_date DATE,
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
