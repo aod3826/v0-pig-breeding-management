@@ -5,6 +5,7 @@ import { DashboardCards } from "@/components/dashboard-cards"
 import { BreedingForm } from "@/components/breeding-form"
 import { ActiveRecords } from "@/components/active-records"
 import { AIAnalysis } from "@/components/ai-analysis"
+import { BottomNav } from "@/components/bottom-nav"
 import { BreedingRecord, BreedingStatus } from "@/lib/types"
 import { Spinner } from "@/components/ui/spinner"
 
@@ -90,7 +91,7 @@ export default function PigBreedingApp() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background pb-20">
       {/* Header */}
       <header className="sticky top-0 z-50 border-b bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/80">
         <div className="container flex h-14 items-center px-4">
@@ -157,8 +158,7 @@ export default function PigBreedingApp() {
         </section>
       </main>
 
-      {/* Bottom spacing for mobile */}
-      <div className="h-8" />
+      <BottomNav />
     </div>
   )
 }
