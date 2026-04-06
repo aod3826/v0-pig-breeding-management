@@ -4,6 +4,7 @@ import useSWR, { mutate } from "swr"
 import { DashboardCards } from "@/components/dashboard-cards"
 import { BreedingForm } from "@/components/breeding-form"
 import { ActiveRecords } from "@/components/active-records"
+import { UpcomingEvents } from "@/components/upcoming-events"
 import { AIAnalysis } from "@/components/ai-analysis"
 import { BottomNav } from "@/components/bottom-nav"
 import { BreedingRecord, BreedingStatus } from "@/lib/types"
@@ -25,6 +26,8 @@ function transformRecord(record: Record<string, unknown>): BreedingRecord {
     status: record.status as BreedingStatus,
     createdAt: new Date(record.created_at as string),
     notes: record.notes as string | undefined,
+    pigletCount: record.piglet_count as number | undefined,
+    deliveredDate: record.delivered_date ? new Date(record.delivered_date as string) : undefined,
   }
 }
 
@@ -42,7 +45,7 @@ export default function PigBreedingApp() {
     dueSoon: number
   }>("/api/breeding/stats", fetcher, { refreshInterval: 30000 })
 
-  const transformedRecords: BreedingRecord[] = records
+  const transformedRecords: BreedingRecord[] = Array.isArray(records)
     ? records.map(transformRecord)
     : []
 
@@ -73,12 +76,28 @@ export default function PigBreedingApp() {
     }
   }
 
-  const updateRecordStatus = async (id: string, status: BreedingStatus) => {
+  const updateRecordStatus = async (
+    id: string, 
+    status: BreedingStatus, 
+    additionalData?: { pigletCount?: number; notes?: string; deliveredDate?: string }
+  ) => {
     try {
+      const body: Record<string, unknown> = { status }
+      
+      if (additionalData?.pigletCount !== undefined) {
+        body.piglet_count = additionalData.pigletCount
+      }
+      if (additionalData?.notes) {
+        body.notes = additionalData.notes
+      }
+      if (additionalData?.deliveredDate) {
+        body.delivered_date = additionalData.deliveredDate
+      }
+
       const response = await fetch(`/api/breeding/${id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status }),
+        body: JSON.stringify(body),
       })
 
       if (response.ok) {
@@ -90,34 +109,49 @@ export default function PigBreedingApp() {
     }
   }
 
+  const deleteRecord = async (id: string) => {
+    try {
+      const response = await fetch(`/api/breeding/${id}`, {
+        method: "DELETE",
+      })
+
+      if (response.ok) {
+        mutate("/api/breeding")
+        mutate("/api/breeding/stats")
+      }
+    } catch (error) {
+      console.error("Error deleting record:", error)
+    }
+  }
+
   return (
     <div className="min-h-screen bg-background pb-20">
       {/* Header */}
       <header className="sticky top-0 z-50 border-b bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/80">
-        <div className="container flex h-14 items-center px-4">
+        <div className="container flex h-14 items-center px-4 sm:h-16">
           <div className="flex items-center gap-2">
             <div className="flex size-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 viewBox="0 0 24 24"
                 fill="currentColor"
-                className="size-5"
+                className="size-5 sm:size-6"
               >
                 <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" />
               </svg>
             </div>
             <div>
-              <h1 className="text-base font-semibold leading-none">PigBreed Pro</h1>
-              <p className="text-xs text-muted-foreground">ระบบจัดการการผสมพันธุ์</p>
+              <h1 className="text-base font-semibold leading-none sm:text-lg">PigBreed Pro</h1>
+              <p className="text-xs text-muted-foreground sm:text-sm">ระบบจัดการการผสมพันธุ์</p>
             </div>
           </div>
         </div>
       </header>
 
-      <main className="container space-y-6 px-4 py-6">
+      <main className="container space-y-6 px-4 py-4 sm:py-6">
         {/* Dashboard Stats */}
         <section>
-          <h2 className="mb-4 text-lg font-semibold">ภาพรวมฟาร์ม</h2>
+          <h2 className="mb-3 text-lg font-semibold sm:mb-4 sm:text-xl">ภาพรวมฟาร์ม</h2>
           <DashboardCards
             totalBreedings={stats?.totalBreedings || 0}
             pregnantCount={stats?.pregnant || 0}
@@ -126,15 +160,21 @@ export default function PigBreedingApp() {
           />
         </section>
 
+        {/* Upcoming Events Timeline */}
+        <section>
+          <h2 className="mb-3 text-lg font-semibold sm:mb-4 sm:text-xl">ปฏิทินกำหนดการ</h2>
+          <UpcomingEvents records={transformedRecords} />
+        </section>
+
         {/* Breeding Form */}
         <section>
-          <h2 className="mb-4 text-lg font-semibold">บันทึกการผสมพันธุ์</h2>
+          <h2 className="mb-3 text-lg font-semibold sm:mb-4 sm:text-xl">บันทึกการผสมพันธุ์</h2>
           <BreedingForm onSubmit={addRecord} />
         </section>
 
         {/* Active Records */}
         <section>
-          <h2 className="mb-4 text-lg font-semibold">รายการแม่พันธุ์</h2>
+          <h2 className="mb-3 text-lg font-semibold sm:mb-4 sm:text-xl">รายการแม่พันธุ์</h2>
           {isLoading ? (
             <div className="flex items-center justify-center py-12">
               <Spinner className="size-8 text-primary" />
@@ -147,18 +187,23 @@ export default function PigBreedingApp() {
             <ActiveRecords
               records={transformedRecords}
               onUpdateStatus={updateRecordStatus}
+              onDeleteRecord={deleteRecord}
             />
           )}
         </section>
 
         {/* AI Analysis */}
         <section>
-          <h2 className="mb-4 text-lg font-semibold">วิเคราะห์ด้วย AI</h2>
+          <h2 className="mb-3 text-lg font-semibold sm:mb-4 sm:text-xl">วิเคราะห์ด้วย AI</h2>
           <AIAnalysis />
         </section>
       </main>
 
       <BottomNav />
+
+      {/* Bottom spacing for mobile */}
+      <div className="h-6 sm:h-8" />
+
     </div>
   )
 }

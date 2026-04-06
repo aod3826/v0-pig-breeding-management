@@ -55,6 +55,8 @@ export interface BreedingRecord {
   status: BreedingStatus
   createdAt: Date
   notes?: string
+  pigletCount?: number    // จำนวนลูกสุกรเมื่อคลอด
+  deliveredDate?: Date    // วันที่คลอดจริง
 }
 
 export interface DashboardStats {
@@ -115,4 +117,80 @@ export function getStatusColor(status: BreedingStatus): string {
     "failed": "bg-destructive/15 text-destructive border-destructive/30",
   }
   return colors[status]
+}
+
+// Get upcoming events for a breeding record
+export interface UpcomingEvent {
+  id: string
+  sowId: string
+  eventType: "first-check" | "confirm" | "due"
+  eventDate: Date
+  daysRemaining: number
+  status: BreedingStatus
+}
+
+export function getUpcomingEvents(records: BreedingRecord[]): UpcomingEvent[] {
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+  const events: UpcomingEvent[] = []
+
+  records.forEach((record) => {
+    // Only include active records (pending-check or pregnant)
+    if (record.status !== "pending-check" && record.status !== "pregnant") {
+      return
+    }
+
+    const checkDays = (date: Date, type: UpcomingEvent["eventType"]) => {
+      const eventDate = new Date(date)
+      eventDate.setHours(0, 0, 0, 0)
+      const daysRemaining = Math.ceil(
+        (eventDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24)
+      )
+      // Include events within the next 14 days or overdue (negative days)
+      if (daysRemaining <= 14) {
+        events.push({
+          id: record.id,
+          sowId: record.sowId,
+          eventType: type,
+          eventDate,
+          daysRemaining,
+          status: record.status,
+        })
+      }
+    }
+
+    if (record.status === "pending-check") {
+      checkDays(record.firstCheckDate, "first-check")
+    }
+    if (record.status === "pregnant") {
+      checkDays(record.dueDate, "due")
+    }
+  })
+
+  // Sort by days remaining
+  return events.sort((a, b) => a.daysRemaining - b.daysRemaining)
+}
+
+export function getEventLabel(eventType: UpcomingEvent["eventType"]): string {
+  const labels: Record<UpcomingEvent["eventType"], string> = {
+    "first-check": "ตรวจท้องครั้งที่ 1",
+    "confirm": "ตรวจยืนยัน",
+    "due": "กำหนดคลอด",
+  }
+  return labels[eventType]
+}
+
+export function getEventColorClass(eventType: UpcomingEvent["eventType"], daysRemaining: number): string {
+  if (daysRemaining < 0) {
+    return "bg-destructive/15 text-destructive border-destructive/30"
+  }
+  if (daysRemaining <= 3) {
+    return "bg-warning/15 text-warning-foreground border-warning/30"
+  }
+  const colors: Record<UpcomingEvent["eventType"], string> = {
+    "first-check": "bg-warning/10 text-accent border-warning/20",
+    "confirm": "bg-info/10 text-info border-info/20",
+    "due": "bg-success/10 text-success border-success/20",
+  }
+  return colors[eventType]
 }
