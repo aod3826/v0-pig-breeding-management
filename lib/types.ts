@@ -1,5 +1,40 @@
 export type BreedingMethod = "artificial" | "natural"
 
+export type SowStatus = "active" | "inactive" | "culled"
+
+export interface Sow {
+  id: string
+  sowId: string
+  name?: string
+  birthDate?: Date
+  status: SowStatus
+  notes?: string
+  createdAt: Date
+  updatedAt: Date
+}
+
+export interface Medication {
+  id: string
+  sowId: string
+  medicationName: string
+  dosage?: string
+  administeredDate: Date
+  administeredBy?: string
+  reason?: string
+  notes?: string
+  createdAt: Date
+}
+
+export interface SowWithBreedingInfo extends Sow {
+  currentStatus: BreedingStatus | null
+  nextEvent: {
+    type: "check" | "confirm" | "due" | null
+    date: Date | null
+    daysUntil: number | null
+  }
+  latestBreeding: BreedingRecord | null
+}
+
 export type BreedingStatus = 
   | "pending-check"  // รอตรวจท้อง
   | "pregnant"       // ตั้งท้อง
