@@ -1,4 +1,3 @@
-import { streamText, convertToModelMessages } from "ai"
 import { createClient } from "@/lib/supabase/server"
 
 export async function POST(req: Request) {
@@ -42,11 +41,45 @@ ${JSON.stringify(records || [], null, 2)}
 ช่วยวิเคราะห์ข้อมูล ให้คำแนะนำ และตอบคำถามเกี่ยวกับการจัดการฟาร์มสุกร
 `
 
-  const result = streamText({
-    model: "openai/gpt-4o-mini",
-    system: farmContext,
-    messages: await convertToModelMessages(messages),
+  const openai = new OpenAI({
+    apiKey: process.env.OPENAI_API_KEY,
   })
 
-  return result.toUIMessageStreamResponse()
+  const response = await openai.chat.completions.create({
+    model: "gpt-4o-mini",
+    system: farmContext,
+    messages: messages.map((msg: { role: string; content: string }) => ({
+      role: msg.role,
+      content: msg.content,
+    })),
+    stream: true,
+  })
+
+  const encoder = new TextEncoder()
+  const readable = new ReadableStream({
+    async start(controller) {
+      try {
+        for await (const chunk of response) {
+          const content = chunk.choices[0]?.delta?.content || ""
+          if (content) {
+            controller.enqueue(
+              encoder.encode(`data: ${JSON.stringify({ type: "text-delta", text: content })}\n\n`)
+            )
+          }
+        }
+        controller.enqueue(encoder.encode("data: [DONE]\n\n"))
+        controller.close()
+      } catch (error) {
+        controller.error(error)
+      }
+    },
+  })
+
+  return new Response(readable, {
+    headers: {
+      "Content-Type": "text/event-stream",
+      "Cache-Control": "no-cache",
+      "Connection": "keep-alive",
+    },
+  })
 }
