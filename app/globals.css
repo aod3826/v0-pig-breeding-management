@@ -138,10 +138,13 @@
 }
 
 @layer base {
+  html {
+    font-size: 112.5%;
+  }
   * {
     @apply border-border outline-ring/50;
   }
   body {
-    @apply bg-background text-foreground text-[17px] leading-relaxed;
+    @apply bg-background text-foreground text-base leading-relaxed;
   }
 }
